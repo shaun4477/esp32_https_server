@@ -32,6 +32,14 @@ int HTTPSConnection::initialize(int serverSocketID, SSL_CTX * sslCtx, HTTPHeader
 
       _ssl = SSL_new(sslCtx);
 
+      Serial.printf("Default Memory:       free size: %8u bytes   largest free block: %8u\n",
+        heap_caps_get_free_size(MALLOC_CAP_DEFAULT),
+        heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
+      // explanation for the following line comes below:
+      Serial.printf("Internal 8bit Memory: free size: %8u bytes   largest free block: %8u\n",
+        heap_caps_get_free_size(MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT),
+        heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT));    
+
       if (_ssl) {
         // Bind SSL to the socket
         int success = SSL_set_fd(_ssl, resSocket);
@@ -42,7 +50,7 @@ int HTTPSConnection::initialize(int serverSocketID, SSL_CTX * sslCtx, HTTPHeader
           if (success) {
             return resSocket;
           } else {
-            HTTPS_LOGE("SSL_accept failed. Aborting handshake. FID=%d", resSocket);
+            HTTPS_LOGE("SSL_accept failed. Aborting handshake. FID=%d, err=%d", resSocket, SSL_get_error(_ssl, success));
           }
         } else {
           HTTPS_LOGE("SSL_set_fd failed. Aborting handshake. FID=%d", resSocket);
